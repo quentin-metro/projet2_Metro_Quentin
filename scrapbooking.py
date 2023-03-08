@@ -9,7 +9,7 @@ if page.ok:
     soup = BeautifulSoup(page.content, 'html.parser')
 
     # Organisation du CSV
-    with open('Metro_Quentin_2_data_032023.csv', 'w') as fichier_csv:
+    with open('Metro_Quentin_2_data_032023.csv', 'w', newline='') as fichier_csv:
         writer = csv.writer(fichier_csv, delimiter=',')
         en_tete = []
         data_livre = []
@@ -29,16 +29,44 @@ if page.ok:
         for image in images:
             data_livre.append(image['src'])
 
+        # Recuperation reviews_rating
+        en_tete.append("Rating")
+        if soup.find_all('p', class_="star-rating Zero"):
+            rating = "0/5"
+        elif soup.find_all('p', class_="star-rating One"):
+            rating = "1/5"
+        elif soup.find_all('p', class_="star-rating Two"):
+            rating = "2/5"
+        elif soup.find_all('p', class_="star-rating Three"):
+            rating = "3/5"
+        elif soup.find_all('p', class_="star-rating Four"):
+            rating = "4/5"
+        elif soup.find_all('p', class_="star-rating Five"):
+            rating = "5/5"
+        data_livre.append(rating)
+
+        # recuperation type du livre
+        lignes = soup.find_all('li')
+        en_tete.append("category")
+        skip_inutile = 0
+        for ligne in lignes:
+            if skip_inutile == 2:
+                data_livre.append(ligne.find('a').string)
+                break
+            skip_inutile +=  1
+
         # recuperation desc
         en_tete.append("Product Description")
         desc = soup.find('p', class_='')
         data_livre.append(desc.string)
 
         # Recuperation UPC,prices, availability, type, score
+        ligne_exclu = ["Product Type", "Tax", "Number of reviews"]
         tableau = soup.find_all('tr')
         for ligne in tableau:
-            if ligne.find('th').string != "Tax":
-                en_tete.append(ligne.find('th').string)
+            ligne_categorie = ligne.find('th').string
+            if ligne_categorie not in ligne_exclu:
+                en_tete.append(ligne_categorie)
                 data_livre.append(ligne.find('td').string)
 
         writer.writerow(en_tete)
