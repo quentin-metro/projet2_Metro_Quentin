@@ -49,7 +49,10 @@ def scrap_product_page(url_product):
 
     # recuperation desc
     desc = soup_product.find('p', class_='')
-    data_livre.append(desc.string)
+    if desc:
+        data_livre.append(desc.string)
+    else:
+        data_livre.append('')
 
     # Recuperation UPC,prices, availability, type, score
     ligne_exclu = ["Product Type", "Tax", "Number of reviews"]
@@ -64,8 +67,9 @@ def scrap_product_page(url_product):
 
 def scrap_category_page(url_category):
     # Config CSV
-    category_name = url_category[51:58]
-    with open('Metro_Quentin_2_data_' + category_name + '_032023.csv', 'w', newline='') as fichier_csv:
+    category_name = url_category[51:-14]
+    with open('./data_csv/Metro_Quentin_2_data_' + category_name + '_032023.csv',
+              'w', encoding="utf-8", newline='') as fichier_csv:
         writer = csv.writer(fichier_csv, delimiter=',')
         en_tete = ['Titre', 'URL', 'Image', 'Rating', 'Category', 'Product_Description', 'UPC', 'Price(excl. tax)',
                    'Price(incl. tax)', 'Availability']
@@ -101,6 +105,13 @@ def scrap_category_page(url_category):
     fichier_csv.close()
 
 
-# url_to_scrape = 'http://books.toscrape.com/index.html'
-url = 'http://books.toscrape.com/catalogue/category/books/romance_8/index.html'
-scrap_category_page(url)
+url_home = 'http://books.toscrape.com/index.html'
+
+# Récupérer la page d'une categorie et la 'parser'
+page_home = requests.get(url_home)
+soup_home = BeautifulSoup(page_home.content, 'html.parser')
+categories = soup_home.find(class_='side_categories').find('ul').find('ul').find_all('a')
+for categorie in categories:
+    new_categorie_url = categorie.get('href')
+    url_category_toscrap = url_home[:26] + new_categorie_url
+    scrap_category_page(url_category_toscrap)
