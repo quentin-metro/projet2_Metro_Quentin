@@ -17,8 +17,16 @@ def scrap_product_page(url_product):
     data_livre.append(url_product)
 
     # recuperation imageURL
-    image = soup_product.find('img')
-    data_livre.append(image['src'])
+    image_ligne = soup_product.find('img')
+    image_url = url_product[:26] + image_ligne['src'][6:]
+    data_livre.append(image_url)
+    keep_characters = (' ', '.', '_')
+    titre_name_compatible = "".join(c for c in titre.string if c.isalnum() or c in keep_characters).rstrip()
+    # telechargement de l'image
+    img_data = requests.get(image_url).content
+    with open('./data/images/' + titre_name_compatible[:100] + '.jpg', 'wb') as fichier_image:
+        fichier_image.write(img_data)
+    fichier_image.close()
 
     # Recuperation reviews_rating
     product_main = soup_product.find(class_="col-sm-6 product_main")
@@ -67,8 +75,8 @@ def scrap_product_page(url_product):
 
 def scrap_category_page(url_category):
     # Config CSV
-    category_name = url_category[51:-14]
-    with open('./data_csv/Metro_Quentin_2_data_' + category_name + '_032023.csv',
+    category_name = url_category[51:-13]
+    with open('./data/CSVs/Metro_Quentin_2_data_' + category_name + '_032023.csv',
               'w', encoding="utf-8", newline='') as fichier_csv:
         writer = csv.writer(fichier_csv, delimiter=',')
         en_tete = ['Titre', 'URL', 'Image', 'Rating', 'Category', 'Product_Description', 'UPC', 'Price(excl. tax)',
