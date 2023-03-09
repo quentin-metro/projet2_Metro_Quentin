@@ -21,19 +21,21 @@ def scrap_product_page(url_product):
     data_livre.append(image['src'])
 
     # Recuperation reviews_rating
-    rating = "inconnu"
-    if soup_product.find_all('p', class_="star-rating Zero"):
+    product_main = soup_product.find(class_="col-sm-6 product_main")
+    if product_main.find('p', class_="star-rating Zero"):
         rating = "0/5"
-    elif soup_product.find_all('p', class_="star-rating One"):
-        rating = "1/5"
-    elif soup_product.find_all('p', class_="star-rating Two"):
-        rating = "2/5"
-    elif soup_product.find_all('p', class_="star-rating Three"):
-        rating = "3/5"
-    elif soup_product.find_all('p', class_="star-rating Four"):
-        rating = "4/5"
-    elif soup_product.find_all('p', class_="star-rating Five"):
+    elif product_main.find('p', class_="star-rating Five"):
         rating = "5/5"
+    elif product_main.find('p', class_="star-rating Four"):
+        rating = "4/5"
+    elif product_main.find('p', class_="star-rating Three"):
+        rating = "3/5"
+    elif product_main.find('p', class_="star-rating Two"):
+        rating = "2/5"
+    elif product_main.find('p', class_="star-rating One"):
+        rating = "1/5"
+    else:
+        rating = "inconnu"
     data_livre.append(rating)
 
     # recuperation type du livre
@@ -57,39 +59,48 @@ def scrap_product_page(url_product):
         if ligne_categorie not in ligne_exclu:
             data_livre.append(ligne.find('td').string)
 
-    # Ecris les données recuperées pour 1 livre
-    writer.writerow(data_livre)
+    return data_livre
 
 
-url_category = 'http://books.toscrape.com/catalogue/category/books/romance_8/index.html'
-page_category = requests.get(url_category)
-
-with open('Metro_Quentin_2_data_032023.csv', 'w', newline='') as fichier_csv:
+def scrap_category_page(url_category):
     # Config CSV
-    writer = csv.writer(fichier_csv, delimiter=',')
-    en_tete = ['Titre', 'URL', 'Image', 'Rating', 'Category', 'Product_Description', 'UPC', 'Price(excl. tax)',
-               'Price(incl. tax)', 'Availability']
-    writer.writerow(en_tete)
+    category_name = url_category[51:58]
+    with open('Metro_Quentin_2_data_' + category_name + '_032023.csv', 'w', newline='') as fichier_csv:
+        writer = csv.writer(fichier_csv, delimiter=',')
+        en_tete = ['Titre', 'URL', 'Image', 'Rating', 'Category', 'Product_Description', 'UPC', 'Price(excl. tax)',
+                   'Price(incl. tax)', 'Availability']
+        writer.writerow(en_tete)
 
-    has_next = True
-    while has_next:
-        has_next = False
+        # scrapper sur plusieurs page
+        has_next = True
+        while has_next:
+            has_next = False
 
-        # Récupérer la page d'une categorie et la 'parser'
-        page_category = requests.get(url_category)
-        soup_category = BeautifulSoup(page_category.content,'html.parser')
+            # Récupérer la page d'une categorie et la 'parser'
+            page_category = requests.get(url_category)
+            soup_category = BeautifulSoup(page_category.content, 'html.parser')
 
-        # Parcours les items possible
-        books = soup_category.find_all(class_="product_pod")
-        for book in books:
-            new_url_product = book.find('h3').find('a').get('href')
-            new_url_product = url_category[:36] + new_url_product[9:]
-            scrap_product_page(new_url_product)
+            # Parcours les items possible
+            books = soup_category.find_all(class_="product_pod")
+            for book in books:
+                new_url_product = book.find('h3').find('a').get('href')
+                new_url_product = url_category[:36] + new_url_product[9:]
+                data_to_write = scrap_product_page(new_url_product)
 
-        # changement de page
-        if soup_category.find(class_="next"):
-            next_page = soup_category.find(class_="next")
-            new_url_partiel = next_page.find('a').get('href')
-            url_category = url_category[:url_category.rfind("/")]
-            url_category = url_category + '/' + new_url_partiel
-            has_next = True
+                # Ecris les données recuperées pour 1 livre
+                writer.writerow(data_to_write)
+
+            # changement de page
+            if soup_category.find(class_="next"):
+                next_page = soup_category.find(class_="next")
+                new_url_partiel = next_page.find('a').get('href')
+                url_category = url_category[:url_category.rfind("/")]
+                url_category = url_category + '/' + new_url_partiel
+                has_next = True
+
+    fichier_csv.close()
+
+
+# url_to_scrape = 'http://books.toscrape.com/index.html'
+url = 'http://books.toscrape.com/catalogue/category/books/romance_8/index.html'
+scrap_category_page(url)
