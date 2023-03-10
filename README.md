@@ -16,4 +16,4 @@ Scrapping du site [Books to Scrape](http://books.toscrape.com/index.html) afin d
 contenant les données et les images obtenues par le scrapping
 - celui-ci contient deux dossiers
 - le dossier contient des '.csv' regroupant les produit par categorie
-- le dossier 'images' contient les images de chaque produit au format '.jpg'
+- le dossier 'images' contient les images de chaque produit au format '.jpg', il suffit de rechercher par le titre de produit (limité à 50 characters)

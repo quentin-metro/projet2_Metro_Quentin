@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+import os
 
 
 def scrap_product_page(url_product):
@@ -24,7 +25,7 @@ def scrap_product_page(url_product):
     titre_name_compatible = "".join(c for c in titre.string if c.isalnum() or c in keep_characters).rstrip()
     # telechargement de l'image
     img_data = requests.get(image_url).content
-    with open('./data_scrapped/images/' + titre_name_compatible[:100] + '.jpg', 'wb') as fichier_image:
+    with open('./data_scrapped/images/' + titre_name_compatible[:50] + '.jpg', 'wb') as fichier_image:
         fichier_image.write(img_data)
     fichier_image.close()
 
@@ -76,7 +77,7 @@ def scrap_product_page(url_product):
 def scrap_category_page(url_category):
     # Config CSV
     category_name = url_category[51:-13]
-    with open('./data_scrapped/CSVs/Metro_Quentin_2_data_' + category_name + '_032023.csv',
+    with open('./data_scrapped/CSVs/books_' + category_name + '_032023.csv',
               'w', encoding="utf-8", newline='') as fichier_csv:
         writer = csv.writer(fichier_csv, delimiter=',')
         en_tete = ['Titre', 'URL', 'Image', 'Rating', 'Category', 'Product_Description', 'UPC', 'Price(excl. tax)',
@@ -113,7 +114,18 @@ def scrap_category_page(url_category):
     fichier_csv.close()
 
 
+def make_a_dir(name):
+    try:
+        os.mkdir(name)
+    except FileExistsError:
+        pass
+
+
 url_home = 'http://books.toscrape.com/index.html'
+# Création des dossiers pour récupérer les data/images
+make_a_dir('./data_scrapped/')
+make_a_dir('./data_scrapped/CSVs/')
+make_a_dir('./data_scrapped/images/')
 
 # Récupérer la page d'une categorie et la 'parser'
 page_home = requests.get(url_home)
