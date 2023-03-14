@@ -69,7 +69,14 @@ def scrap_product_page(url_product):
     for ligne in tableau:
         ligne_categorie = ligne.find('th').string
         if ligne_categorie not in ligne_exclu:
-            data_livre.append(ligne.find('td').string)
+            if ligne_categorie == "Availability":
+                number_availability = ''
+                for character in ligne.find('td').string:
+                    if character.isdigit():
+                        number_availability = number_availability + character
+                data_livre.append(number_availability)
+            else:
+                data_livre.append(ligne.find('td').string)
 
     return data_livre
 
